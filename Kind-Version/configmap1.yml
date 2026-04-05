@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: php-code
+data:
+  index.php: |
+    <?php
+    echo "Connecting to: mongodb://mongo-service:27017 ...";
+    $manager = new MongoDB\Driver\Manager("mongodb://mongo-service:27017");
+    print_r($manager->getServers());
+    ?>

@@ -1,0 +1,46 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: ranti-project
+  name: httpd-php-deployment
+  annotations:
+    image.openshift.io/triggers: |
+      [
+        {
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "php-mongo:dev"
+          },
+          "fieldPath": "spec.template.spec.containers[?(@.name==\"php-apache\")].image"
+        }
+      ]
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: php-apache
+          image: image-registry.openshift-image-registry.svc:5000/ranti-project/php-mongo:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: code
+              mountPath: /var/www/html
+      volumes:
+        - name: code
+          configMap:
+            name: php-code

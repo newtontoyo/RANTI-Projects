@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: php-code
+data:
+  index.php: |
+    <?php
+    $manager = new MongoDB\Driver\Manager("mongodb://mongo-service:27017");
+    $namespace = "testdb.entries";
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["category"])) {
+        $bulk = new MongoDB\Driver\BulkWrite;
+        // This creates a structured BSON document: { "category": "employee", "name": "james" }
+        $bulk->insert([
+            "category" => strtolower($_POST["category"]),
+            "name" => $_POST["name"],
+            "timestamp" => date("Y-m-d H:i:s")
+        ]);
+        $manager->executeBulkWrite($namespace, $bulk);
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["action"]) && $_POST["action"] == "delete_all") {
+        $bulk = new MongoDB\Driver\BulkWrite;
+        $bulk->delete([]);
+        $manager->executeBulkWrite($namespace, $bulk);
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>K8s Employee Manager</title>
+        <style>
+            body { font-family: sans-serif; max-width: 500px; margin: 40px auto; background: #f0f2f5; }
+            .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+            button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+            .delete { background: #dc3545; }
+            .entry { background: #fff; border-left: 4px solid #28a745; padding: 10px; margin-top: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h2>👥 Employee Registry</h2>
+            <form method="POST">
+                <input type="text" name="category" placeholder="Category (e.g. employee)" required>
+                <input type="text" name="name" placeholder="Name (e.g. james)" required>
+                <button type="submit">Add to Database</button>
+            </form>
+
+            <h3>Records:</h3>
+            <?php
+            try {
+                $cursor = $manager->executeQuery($namespace, new MongoDB\Driver\Query([], ['sort' => ['timestamp' => -1]]));
+                foreach ($cursor as $doc) {
+                    echo "<div class='entry'>";
+                    echo "<strong>" . htmlspecialchars($doc->category) . ":</strong> ";
+                    echo htmlspecialchars($doc->name);
+                    echo "<br><small>" . $doc->timestamp . "</small>";
+                    echo "</div>";
+                }
+            } catch (Exception $e) { echo "Error: " . $e->getMessage(); }
+            ?>
+
+            <form method="POST" style="margin-top:20px;">
+                <input type="hidden" name="action" value="delete_all">
+                <button type="submit" class="delete">Clear All</button>
+            </form>
+        </div>
+    </body>
+    </html>
