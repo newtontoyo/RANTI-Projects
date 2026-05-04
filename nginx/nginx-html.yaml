@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Voting App</title>
+    </head>
+    <body>
+        <h1>Vote for your favorite 🐾</h1>
+
+        <button onclick="vote('cats')">Vote Cats 🐱</button>
+        <button onclick="vote('dogs')">Vote Dogs 🐶</button>
+
+        <h2>Results:</h2>
+        <pre id="results">Loading...</pre>
+
+        <script>
+            function vote(choice) {
+                fetch('/vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vote: choice })
+                }).then(() => loadResults());
+            }
+
+            function loadResults() {
+                fetch('/results')
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('results').innerText =
+                            JSON.stringify(data, null, 2);
+                    });
+            }
+
+            setInterval(loadResults, 2000);
+            loadResults();
+        </script>
+    </body>
+    </html>

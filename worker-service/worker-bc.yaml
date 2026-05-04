@@ -1,0 +1,39 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftNewBuild
+  creationTimestamp: "2026-05-03T23:38:09Z"
+  generation: 2
+  labels:
+    app: worker
+  name: worker
+  namespace: default
+  resourceVersion: "6414392"
+  uid: ba2c4b03-479f-4db7-968c-f70dec101cf0
+spec:
+  failedBuildsHistoryLimit: 5
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: worker:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    binary: {}
+    type: Binary
+  strategy:
+    dockerStrategy: {}
+    type: Docker
+  successfulBuildsHistoryLimit: 5
+  triggers:
+  - github:
+      secret: R-OnEV74hBmQM-xzf_bk
+    type: GitHub
+  - generic:
+      secret: KhMLKjktYIWW0XIGENjn
+    type: Generic
+status:
+  lastVersion: 1
